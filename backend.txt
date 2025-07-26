@@ -1,0 +1,9 @@
+For a production implementation, you would need to:
+
+Set up a backend service (Node.js, PHP, Python, etc.) with an API endpoint to handle sending emails
+
+Replace the sendEmails function with a fetch/AJAX call to your backend API
+
+Implement proper email sending on the backend using a service like SendGrid, Mailgun, or your own SMTP server
+
+The current implementation simulates the email sending process with a delay and logs to the console, which demonstrates the UI flow. The rest of the invite functionality (copying links, social sharing) was already working correctly.
