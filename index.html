@@ -761,6 +761,11 @@
         aspect-ratio: 16/9;
       }
 
+      .video-tile.large {
+        grid-column: span 2;
+        grid-row: span 2;
+      }
+
       .video-tile.active-speaker {
         box-shadow: 0 0 0 3px var(--success);
       }
@@ -2101,7 +2106,7 @@
           </div>
 
           <div class="video-container" id="videoContainer">
-            <div class="video-tile active-speaker">
+            <div class="video-tile large active-speaker">
               <div class="video-placeholder">
                 <div class="user-avatar">TS</div>
                 <div>Taylor Smith is presenting</div>
@@ -2478,15 +2483,21 @@
         return result;
       }
 
-      // Show notification function
+      // Show notification function with timeout management
       function showNotification(message, isMeetingPage = true) {
         const notification = isMeetingPage
           ? document.getElementById("meetingNotification")
           : document.getElementById("notification");
-
+        
+        // Clear any existing timeout
+        if (notification.timeoutId) {
+          clearTimeout(notification.timeoutId);
+        }
+        
         notification.textContent = message;
         notification.classList.add("show");
-        setTimeout(() => {
+        
+        notification.timeoutId = setTimeout(() => {
           notification.classList.remove("show");
         }, 2000);
       }
@@ -2613,7 +2624,7 @@
           window.location.href = `?meetingId=${meetingId}`;
         });
 
-        // Create meeting button click handler - UPDATED
+        // Create meeting button click handler
         createMeetingButton.addEventListener("click", function () {
           // Set user preferences from form
           const displayName = displayNameInput.value.trim() || "Host";
@@ -2801,6 +2812,7 @@
         let localStream;
         let remoteStream;
         let dataChannel;
+        let timerInterval;
 
         // Initialize WebRTC with appropriate behavior for host/guest
         async function initWebRTC(isHost = true) {
@@ -3207,7 +3219,6 @@
         profileClose.addEventListener("click", closeProfile);
         saveProfile.addEventListener("click", saveProfileChanges);
         cancelProfile.addEventListener("click", closeProfile);
-        overlay.addEventListener("click", closeProfile);
 
         // Settings functionality
         function openSettings() {
@@ -3227,7 +3238,6 @@
         settingsSidebarItem.addEventListener("click", openSettings);
         settingsClose.addEventListener("click", closeSettings);
         settingsSave.addEventListener("click", closeSettings);
-        overlay.addEventListener("click", closeSettings);
 
         // Sign out functionality
         document
@@ -3361,7 +3371,22 @@
         }
 
         // Start meeting timer
-        const timerInterval = setInterval(updateTimer, 1000);
+        timerInterval = setInterval(updateTimer, 1000);
+
+        function updateTimer() {
+          if (!callActive) return;
+
+          meetingSeconds++;
+          const hours = Math.floor(meetingSeconds / 3600);
+          const minutes = Math.floor((meetingSeconds % 3600) / 60);
+          const seconds = meetingSeconds % 60;
+
+          meetingTimer.textContent = `${hours
+            .toString()
+            .padStart(2, "0")}:${minutes.toString().padStart(2, "0")}:${seconds
+            .toString()
+            .padStart(2, "0")}`;
+        }
 
         // Sidebar item clicks
         chatSidebarItem.addEventListener("click", function () {
@@ -3550,7 +3575,6 @@
 
         // Close invite modal
         inviteClose.addEventListener("click", closeInviteModal);
-        overlay.addEventListener("click", closeInviteModal);
 
         // Chat functionality
         function openChat() {
@@ -3789,9 +3813,7 @@
               showNotification("Started screen sharing");
 
               // Change the main video tile to show shared screen
-              const mainTile = document.querySelector(
-                ".video-tile.large .video-placeholder"
-              );
+              const mainTile = document.querySelector(".video-tile:first-child");
               mainTile.innerHTML = "<video autoplay playsinline></video>";
               const videoElement = mainTile.querySelector("video");
               videoElement.srcObject = stream;
@@ -3814,9 +3836,7 @@
               showNotification("Stopped screen sharing");
 
               // Revert the main video tile
-              const mainTile = document.querySelector(
-                ".video-tile.large .video-placeholder"
-              );
+              const mainTile = document.querySelector(".video-tile:first-child");
               mainTile.innerHTML =
                 '<div class="user-avatar">TS</div><div>Taylor Smith is presenting</div>';
             }
@@ -3862,6 +3882,14 @@
               localStream.getTracks().forEach((track) => track.stop());
             }
 
+            // Clean up screen sharing if active
+            if (isSharing) {
+              const stream = document.querySelector(".video-tile:first-child video").srcObject;
+              if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+              }
+            }
+
             // Turn off all controls
             cameraButton.classList.remove("active");
             micButton.classList.remove("active");
@@ -3873,7 +3901,9 @@
             isRecording = false;
 
             // Stop timer
-            clearInterval(timerInterval);
+            if (timerInterval) {
+              clearInterval(timerInterval);
+            }
 
             // Show leave message in chat
             addMessage("system", "You left the meeting", "", false);
@@ -3903,22 +3933,6 @@
           e.stopPropagation();
         });
 
-        // Update timer
-        function updateTimer() {
-          if (!callActive) return;
-
-          meetingSeconds++;
-          const hours = Math.floor(meetingSeconds / 3600);
-          const minutes = Math.floor((meetingSeconds % 3600) / 60);
-          const seconds = meetingSeconds % 60;
-
-          meetingTimer.textContent = `${hours
-            .toString()
-            .padStart(2, "0")}:${minutes.toString().padStart(2, "0")}:${seconds
-            .toString()
-            .padStart(2, "0")}`;
-        }
-
         // Simulate incoming message after 8 seconds
         setTimeout(() => {
           const time = new Date().toLocaleTimeString([], {
@@ -3935,7 +3949,7 @@
           // Change the main video tile to show presentation
           setTimeout(() => {
             const mainTile = document.querySelector(
-              ".video-tile.large .video-placeholder"
+              ".video-tile:first-child .video-placeholder"
             );
             mainTile.innerHTML = "<video autoplay playsinline></video>";
             const videoElement = mainTile.querySelector("video");
