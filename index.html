@@ -35,6 +35,106 @@
         touch-action: manipulation;
       }
 
+      .dark-mode {
+        background-color: #121212;
+        color: #f5f5f5;
+      }
+
+      .dark-mode .join-container,
+      .dark-mode .signup-container,
+      .dark-mode .header,
+      .dark-mode .sidebar,
+      .dark-mode .chat-panel,
+      .dark-mode .participants-panel,
+      .dark-mode .settings-panel,
+      .dark-mode .profile-panel,
+      .dark-mode .invite-container,
+      .dark-mode .controls-bar,
+      .dark-mode .control-button,
+      .dark-mode .video-info,
+      .dark-mode .video-control {
+        background-color: #1e1e1e;
+        color: #f5f5f5;
+      }
+
+      .dark-mode .input-field,
+      .dark-mode .chat-input,
+      .dark-mode .profile-input,
+      .dark-mode .invite-input,
+      .dark-mode .settings-select {
+        background-color: #2d2d2d;
+        color: #f5f5f5;
+        border-color: #444;
+      }
+
+      .dark-mode .input-field:focus,
+      .dark-mode .chat-input:focus,
+      .dark-mode .profile-input:focus,
+      .dark-mode .invite-input:focus {
+        border-color: var(--primary);
+        box-shadow: 0 0 0 2px rgba(67, 97, 238, 0.3);
+      }
+
+      .dark-mode .chat-messages {
+        background-color: #252525;
+      }
+
+      .dark-mode .message-content {
+        background-color: #333;
+        color: #f5f5f5;
+      }
+
+      .dark-mode .message.own .message-content {
+        background-color: var(--primary);
+        color: white;
+      }
+
+      .dark-mode .message-system {
+        color: #aaa;
+      }
+
+      .dark-mode .divider::before,
+      .dark-mode .divider::after {
+        border-color: #444;
+      }
+
+      .dark-mode .create-meeting,
+      .dark-mode .signup-footer,
+      .dark-mode .checkbox-label {
+        color: #aaa;
+      }
+
+      .dark-mode .create-meeting a,
+      .dark-mode .signup-footer a {
+        color: var(--primary);
+      }
+
+      .dark-mode .sidebar-item:hover,
+      .dark-mode .participant-item:hover {
+        background-color: #333;
+      }
+
+      .dark-mode .sidebar-item.active {
+        background-color: rgba(67, 97, 238, 0.2);
+        color: var(--primary);
+      }
+
+      .dark-mode .settings-option {
+        border-bottom-color: #444;
+      }
+
+      .dark-mode .settings-option-desc {
+        color: #aaa;
+      }
+
+      .dark-mode .toggle-slider {
+        background-color: #555;
+      }
+
+      .dark-mode input:checked + .toggle-slider {
+        background-color: var(--primary);
+      }
+
       .page {
         display: none;
         height: 100vh;
@@ -2357,7 +2457,7 @@
                   </div>
                 </div>
                 <label class="toggle-switch">
-                  <input type="checkbox" />
+                  <input type="checkbox" id="darkModeToggle" />
                   <span class="toggle-slider"></span>
                 </label>
               </div>
@@ -2384,7 +2484,7 @@
                   </div>
                 </div>
                 <label class="toggle-switch">
-                  <input type="checkbox" checked />
+                  <input type="checkbox" id="muteOnJoinToggle" />
                   <span class="toggle-slider"></span>
                 </label>
               </div>
@@ -2394,7 +2494,7 @@
                   <div class="settings-option-desc">Join without video</div>
                 </div>
                 <label class="toggle-switch">
-                  <input type="checkbox" />
+                  <input type="checkbox" id="videoOffToggle" />
                   <span class="toggle-slider"></span>
                 </label>
               </div>
@@ -2404,7 +2504,7 @@
                   <div class="settings-option-desc">Display elapsed time</div>
                 </div>
                 <label class="toggle-switch">
-                  <input type="checkbox" checked />
+                  <input type="checkbox" id="showTimerToggle" checked />
                   <span class="toggle-slider"></span>
                 </label>
               </div>
@@ -2690,13 +2790,13 @@
 
           // Validate inputs
           if (!name) {
-            showNotification("Please enter your full name", false, true);
+            showNotification("Please enter your full name", false);
             signupNameInput.focus();
             return;
           }
 
           if (!email) {
-            showNotification("Please enter your email address", false, true);
+            showNotification("Please enter your email address", false);
             signupEmailInput.focus();
             return;
           }
@@ -2704,13 +2804,13 @@
           // Basic email validation
           const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
           if (!emailRegex.test(email)) {
-            showNotification("Please enter a valid email address", false, true);
+            showNotification("Please enter a valid email address", false);
             signupEmailInput.focus();
             return;
           }
 
           if (!password) {
-            showNotification("Please create a password", false, true);
+            showNotification("Please create a password", false);
             signupPasswordInput.focus();
             return;
           }
@@ -2718,38 +2818,30 @@
           if (password.length < 8) {
             showNotification(
               "Password must be at least 8 characters",
-              false,
-              true
+              false
             );
             signupPasswordInput.focus();
             return;
           }
 
           if (password !== confirmPassword) {
-            showNotification("Passwords do not match", false, true);
+            showNotification("Passwords do not match", false);
             signupConfirmPasswordInput.focus();
             return;
           }
 
-          // Simulate signup process (in a real app, you would call your backend API)
-          signupButton.disabled = true;
-          signupButton.innerHTML =
-            '<i class="fas fa-spinner fa-spin"></i> Signing Up...';
+          // Store user data
+          localStorage.setItem("displayName", name);
+          localStorage.setItem("email", email);
+          localStorage.setItem("password", password); // Note: In production, never store passwords in localStorage
+          localStorage.setItem("isLoggedIn", "true");
 
+          // Show success and redirect
+          signupNotification.textContent = "Account created successfully!";
+          signupNotification.classList.add("show");
+          
           setTimeout(() => {
-            // Store user data in localStorage (in a real app, you would use a proper authentication system)
-            localStorage.setItem("displayName", name);
-            localStorage.setItem("email", email);
-            localStorage.setItem("isLoggedIn", "true");
-
-            // Show success notification
-            signupNotification.textContent = "Account created successfully!";
-            signupNotification.classList.add("show");
-
-            // Redirect to join page after a short delay
-            setTimeout(() => {
-              showJoinPage();
-            }, 1500);
+            showJoinPage();
           }, 1500);
         });
 
@@ -3194,6 +3286,15 @@
             return;
           }
 
+          // Validate email if changed
+          if (newEmail) {
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(newEmail)) {
+              showNotification("Please enter a valid email address");
+              return;
+            }
+          }
+
           // Save to localStorage
           localStorage.setItem("displayName", newName);
           if (newEmail) {
@@ -3225,6 +3326,25 @@
           settingsOpen = true;
           settingsPanel.classList.add("show");
           overlay.classList.add("show");
+
+          // Load current settings
+          const darkModeToggle = document.querySelector("#darkModeToggle");
+          const muteOnJoinToggle = document.querySelector("#muteOnJoinToggle");
+          const videoOffToggle = document.querySelector("#videoOffToggle");
+          const showTimerToggle = document.querySelector("#showTimerToggle");
+
+          if (darkModeToggle) {
+            darkModeToggle.checked = localStorage.getItem("darkMode") === "true";
+          }
+          if (muteOnJoinToggle) {
+            muteOnJoinToggle.checked = localStorage.getItem("muteOnJoin") === "true";
+          }
+          if (videoOffToggle) {
+            videoOffToggle.checked = localStorage.getItem("videoOff") === "true";
+          }
+          if (showTimerToggle) {
+            showTimerToggle.checked = localStorage.getItem("showTimer") !== "false";
+          }
         }
 
         function closeSettings() {
@@ -3233,28 +3353,57 @@
           overlay.classList.remove("show");
         }
 
+        function saveSettings() {
+          const darkModeToggle = document.querySelector("#darkModeToggle");
+          const muteOnJoinToggle = document.querySelector("#muteOnJoinToggle");
+          const videoOffToggle = document.querySelector("#videoOffToggle");
+          const showTimerToggle = document.querySelector("#showTimerToggle");
+
+          if (darkModeToggle) {
+            localStorage.setItem("darkMode", darkModeToggle.checked);
+            document.body.classList.toggle("dark-mode", darkModeToggle.checked);
+          }
+          if (muteOnJoinToggle) {
+            localStorage.setItem("muteOnJoin", muteOnJoinToggle.checked);
+          }
+          if (videoOffToggle) {
+            localStorage.setItem("videoOff", videoOffToggle.checked);
+          }
+          if (showTimerToggle) {
+            localStorage.setItem("showTimer", showTimerToggle.checked);
+            document.getElementById("meetingTimer").style.display = 
+              showTimerToggle.checked ? "block" : "none";
+          }
+
+          showNotification("Settings saved");
+          closeSettings();
+        }
+
         // Settings event listeners
         settingsDropdownItem.addEventListener("click", openSettings);
         settingsSidebarItem.addEventListener("click", openSettings);
         settingsClose.addEventListener("click", closeSettings);
-        settingsSave.addEventListener("click", closeSettings);
+        settingsSave.addEventListener("click", saveSettings);
 
         // Sign out functionality
         document
           .getElementById("signOutDropdownItem")
           .addEventListener("click", function () {
             if (confirm("Are you sure you want to sign out?")) {
-              // Clear any session data
-              localStorage.removeItem("displayName");
-              localStorage.removeItem("email");
-              localStorage.removeItem("muteOnJoin");
-              localStorage.removeItem("videoOff");
-              localStorage.removeItem("isLoggedIn");
+              // Clear session data but keep some preferences
+              const darkMode = localStorage.getItem("darkMode");
+              const muteOnJoin = localStorage.getItem("muteOnJoin");
+              const videoOff = localStorage.getItem("videoOff");
+              
+              localStorage.clear();
+              
+              // Restore preferences
+              if (darkMode) localStorage.setItem("darkMode", darkMode);
+              if (muteOnJoin) localStorage.setItem("muteOnJoin", muteOnJoin);
+              if (videoOff) localStorage.setItem("videoOff", videoOff);
 
-              // Redirect to join page after a short delay
-              setTimeout(() => {
-                window.location.href = "?";
-              }, 500);
+              // Redirect to join page
+              window.location.href = window.location.pathname;
             }
           });
 
@@ -3968,6 +4117,11 @@
       // Initialize the app
       document.addEventListener("DOMContentLoaded", function () {
         checkPageToShow();
+
+        // Add dark mode class if enabled
+        if (localStorage.getItem("darkMode") === "true") {
+          document.body.classList.add("dark-mode");
+        }
 
         if (document.getElementById("joinPage").style.display !== "none") {
           initJoinPage();
